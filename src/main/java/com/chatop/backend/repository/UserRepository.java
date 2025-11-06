@@ -4,7 +4,7 @@ import com.chatop.backend.model.User;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-// Repository interface for User entity database operations.
+/** Repository interface for User entity database operations. */
 public interface UserRepository extends JpaRepository<User, Long> {
 
   /**

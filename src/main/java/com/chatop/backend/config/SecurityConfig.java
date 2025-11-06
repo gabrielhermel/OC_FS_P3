@@ -1,5 +1,10 @@
 package com.chatop.backend.config;
 
+import com.chatop.backend.security.JwtAuthenticationFilter;
+import com.chatop.backend.security.JwtService;
+import com.chatop.backend.service.AuthService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -8,24 +13,47 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /**
- * Security configuration for the application. Configures HTTP security settings and authentication
- * requirements.
+ * Configures application security settings including JWT authentication.
  */
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
 
+  private final JwtService jwtService;
+
+  // Controls whether Swagger is publicly accessible, injected from application properties.
+  @Value("${swagger.noauth}")
+  private boolean swaggerNoAuth;
+
   /**
-   * Configures the security filter chain. Disables CSRF protection for stateless API and only
-   * permits access to authorization endpoints without authentication.
+   * Registers the {@link JwtAuthenticationFilter} bean used to validate JWT tokens and populate the
+   * authentication context. Declared separately to avoid circular dependencies.
    *
-   * @param httpSecurity the HttpSecurity to configure
+   * @param authService service used to retrieve user details for token validation. Injected lazily
+   *                    to break circular reference.
+   * @return a configured {@link JwtAuthenticationFilter} instance
+   */
+  @Bean
+  public JwtAuthenticationFilter jwtAuthFilter(AuthService authService) {
+    return new JwtAuthenticationFilter(jwtService, authService);
+  }
+
+  /**
+   * Configures the HTTP security filter chain. Disables CSRF protection for stateless API and only
+   * permits access to authorization endpoints (and conditionally Swagger) without authentication.
+   * Integrates the JWT filter into the chain.
+   *
+   * @param httpSecurity  the HttpSecurity instance to configure
+   * @param jwtAuthFilter the JWT authentication filter bean
    * @return the configured SecurityFilterChain
    * @throws Exception if configuration fails
    */
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+  public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity,
+    JwtAuthenticationFilter jwtAuthFilter) throws Exception {
     httpSecurity
       // Disable CSRF because JWTs are being used, not cookies
       .csrf(AbstractHttpConfigurer::disable)
@@ -35,12 +63,18 @@ public class SecurityConfig {
         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
       // Authorization rules
-      .authorizeHttpRequests(auth -> auth
-        // Allow unauthenticated access to authentication endpoints
-        .requestMatchers("/api/auth/**").permitAll()
-        // Require authentication for everything else
-        .anyRequest().authenticated()
-      );
+      .authorizeHttpRequests(auth -> {
+        auth
+          .requestMatchers("/api/auth/register", "/api/auth/login").permitAll() // public
+          .requestMatchers("/api/auth/me").authenticated(); // protected
+        if (swaggerNoAuth) {
+          auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**").permitAll();
+        }
+        auth.anyRequest().authenticated();
+      })
+
+      // Add JWT filter before Spring’s built-in authentication filter
+      .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
     return httpSecurity.build();
   }

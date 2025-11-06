@@ -2,11 +2,12 @@ package com.chatop.backend.service;
 
 import com.chatop.backend.model.User;
 import com.chatop.backend.repository.UserRepository;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-// Service handling user authentication and registration operations.
+/** Service handling user authentication and registration operations. */
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -34,5 +35,26 @@ public class AuthService {
     user.setPassword(passwordEncoder.encode(rawPassword));
 
     return userRepository.save(user);
+  }
+
+  /**
+   * Finds a user by their email address.
+   *
+   * @param email the email to search for
+   * @return an Optional containing the user if found, empty otherwise
+   */
+  public Optional<User> findByEmail(String email) {
+    return userRepository.findByEmail(email);
+  }
+
+  /**
+   * Validates a raw password against the stored encrypted password.
+   *
+   * @param rawPassword     the plain text password to validate
+   * @param encodedPassword the stored encrypted password
+   * @return true if the passwords match, false otherwise
+   */
+  public boolean passwordIsValid(String rawPassword, String encodedPassword) {
+    return passwordEncoder.matches(rawPassword, encodedPassword);
   }
 }

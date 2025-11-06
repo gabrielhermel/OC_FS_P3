@@ -12,7 +12,7 @@ import java.util.function.Function;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-//Service for generating and validating JWT tokens.
+/** Service for generating and validating JWT tokens. */
 @Service
 public class JwtService {
 
@@ -38,13 +38,13 @@ public class JwtService {
    * Generates a JWT token with custom claims and username.
    *
    * @param claims   additional claims to include in the token
-   * @param username the subject (username) of the token
+   * @param email the subject (user's email) of the token
    * @return the generated JWT token string
    */
-  public String generateToken(Map<String, Object> claims, String username) {
+  public String generateToken(Map<String, Object> claims, String email) {
     return Jwts.builder()
       .setClaims(claims)
-      .setSubject(username)
+      .setSubject(email)
       .setIssuedAt(new Date(System.currentTimeMillis()))
       .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
       .signWith(getSigningKey(), SignatureAlgorithm.HS256)
