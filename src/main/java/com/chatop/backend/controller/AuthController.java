@@ -78,7 +78,7 @@ public class AuthController {
 
       // Convert entity to DTO
       UserResponse response = new UserResponse(
-        user.getId().intValue(),
+        user.getId(),
         user.getName(),
         user.getEmail(),
         user.getCreatedAt(),
@@ -181,7 +181,7 @@ public class AuthController {
 
     // Convert entity to DTO
     UserResponse response = new UserResponse(
-      user.getId().intValue(),
+      user.getId(),
       user.getName(),
       user.getEmail(),
       user.getCreatedAt(),

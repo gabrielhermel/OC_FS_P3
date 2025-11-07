@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "Response containing authenticated user details")
 public record UserResponse(
-  @Schema(example = "1") Integer id,
+  @Schema(example = "1") Long id,
   @Schema(example = "John Doe") String name,
   @Schema(example = "john.doe@example.com") String email,
   @Schema(example = "2025-11-06T12:00:00") LocalDateTime createdAt,

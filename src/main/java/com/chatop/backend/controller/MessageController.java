@@ -71,6 +71,13 @@ public class MessageController {
       content = @Content(
         mediaType = "application/json",
         schema = @Schema(example = "{}")
+      )),
+    @ApiResponse(
+      responseCode = "403",
+      description = "Forbidden: insufficient permissions",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(example = "{}")
       ))
   })
   @PostMapping
