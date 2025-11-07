@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,6 +28,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/messages")
 @RequiredArgsConstructor
+@Tag(
+  name = "Messages",
+  description = "Endpoints for sending messages about rentals"
+)
 public class MessageController {
 
   private final MessageService messageService;
@@ -49,14 +54,24 @@ public class MessageController {
     @ApiResponse(
       responseCode = "200",
       description = "Message sent successfully",
-      content = @Content(schema = @Schema(implementation = MessageResponse.class))),
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = MessageResponse.class)
+      )),
     @ApiResponse(
       responseCode = "400",
       description = "Invalid input or missing fields",
-      content = @Content(schema = @Schema(example = "{}"))),
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(example = "{}")
+      )),
     @ApiResponse(
       responseCode = "401",
-      description = "Unauthorized or missing JWT")
+      description = "Unauthorized or missing JWT",
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(example = "{}")
+      ))
   })
   @PostMapping
   public ResponseEntity<MessageResponse> sendMessage(

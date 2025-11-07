@@ -58,11 +58,17 @@ public class AuthController {
     @ApiResponse(
       responseCode = "200",
       description = "User registered successfully",
-      content = @Content(schema = @Schema(implementation = UserResponse.class))),
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = UserResponse.class)
+      )),
     @ApiResponse(
       responseCode = "400",
       description = "Invalid input or email already in use",
-      content = @Content)
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(example = "{}")
+      ))
   })
   @PostMapping("/register")
   public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
@@ -103,11 +109,17 @@ public class AuthController {
     @ApiResponse(
       responseCode = "200",
       description = "User authenticated successfully",
-      content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = LoginResponse.class)
+      )),
     @ApiResponse(
       responseCode = "401",
       description = "Invalid credentials",
-      content = @Content)
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(example = "{}")
+      ))
   })
   @PostMapping("/login")
   public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
@@ -146,11 +158,17 @@ public class AuthController {
     @ApiResponse(
       responseCode = "200",
       description = "User details retrieved successfully",
-      content = @Content(schema = @Schema(implementation = UserResponse.class))),
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(implementation = UserResponse.class)
+      )),
     @ApiResponse(
       responseCode = "401",
       description = "User not authenticated or token invalid",
-      content = @Content)
+      content = @Content(
+        mediaType = "application/json",
+        schema = @Schema(example = "{}")
+      ))
   })
   @GetMapping("/me")
   public ResponseEntity<UserResponse> getAuthenticatedUser(
