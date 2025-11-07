@@ -7,6 +7,15 @@ import com.chatop.backend.dto.UserResponse;
 import com.chatop.backend.model.User;
 import com.chatop.backend.security.JwtService;
 import com.chatop.backend.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,26 +28,63 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * REST controller for authentication endpoints.
+ * REST controller for authentication endpoints. Handles user registration, login, and JWT-protected
+ * user information retrieval.
  */
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Tag(
+  name = "Authentication",
+  description = "Endpoints for user registration, login, and JWT-protected user retrieval"
+)
 public class AuthController {
 
   private final AuthService authService;
   private final JwtService jwtService;
 
   /**
-   * Registers a new user.
+   * Registers a new user. Note: Passwords are encoded before storage. Email uniqueness is
+   * enforced.
    *
    * @param request the registration request containing email, name, and password
-   * @return ResponseEntity with the created User
+   * @return ResponseEntity containing the registered user's public information
    */
+  @Operation(
+    summary = "Register a new user",
+    description = "Creates a new user account. Accessible without authentication."
+  )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      description = "User registered successfully",
+      content = @Content(schema = @Schema(implementation = UserResponse.class))),
+    @ApiResponse(
+      responseCode = "400",
+      description = "Invalid input or email already in use",
+      content = @Content)
+  })
   @PostMapping("/register")
-  public ResponseEntity<User> register(@RequestBody RegisterRequest request) {
-    User user = authService.registerUser(request.email(), request.name(), request.password());
-    return ResponseEntity.ok(user);
+  public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
+    try {
+      // Delegate to service layer for business logic
+      User user = authService.registerUser(request.email(), request.name(), request.password());
+
+      // Convert entity to DTO
+      UserResponse response = new UserResponse(
+        user.getId().intValue(),
+        user.getName(),
+        user.getEmail(),
+        user.getCreatedAt(),
+        user.getUpdatedAt()
+      );
+
+      return ResponseEntity.ok(response);
+    } catch (IllegalArgumentException e) {
+      // Email already in use or other validation error
+      return ResponseEntity.badRequest().body(new UserResponse(null, null, null, null, null));
+    }
+
   }
 
   /**
@@ -48,22 +94,41 @@ public class AuthController {
    * @return ResponseEntity with LoginResponse containing the JWT token
    * @throws RuntimeException if credentials are invalid
    */
+  @Operation(
+    summary = "Authenticate a user",
+    description = "Authenticates user credentials and returns a JWT token. "
+      + "Accessible without authentication."
+  )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      description = "User authenticated successfully",
+      content = @Content(schema = @Schema(implementation = LoginResponse.class))),
+    @ApiResponse(
+      responseCode = "401",
+      description = "Invalid credentials",
+      content = @Content)
+  })
   @PostMapping("/login")
   public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
-    // Find user by email
-    User user = authService.findByEmail(request.email()).orElseThrow(() ->
-      new RuntimeException("Invalid credentials"));
+    try {
+      // Find user by email
+      User user = authService.findByEmail(request.email()).orElseThrow(() ->
+        new RuntimeException("Invalid credentials"));
 
-    // Verify password using the encoder
-    if (!authService.passwordIsValid(request.password(), user.getPassword())) {
-      throw new RuntimeException("Invalid credentials");
+      // Verify password using the encoder
+      if (!authService.passwordIsValid(request.password(), user.getPassword())) {
+        throw new RuntimeException("Invalid credentials");
+      }
+
+      // Generate JWT token
+      String token = jwtService.generateToken(Map.of(), user.getEmail());
+
+      // Return the token in a DTO
+      return ResponseEntity.ok(new LoginResponse(token));
+    } catch (RuntimeException e) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new LoginResponse(null));
     }
-
-    // Generate JWT token
-    String token = jwtService.generateToken(Map.of(), user.getEmail());
-
-    // Return the token in a DTO
-    return ResponseEntity.ok(new LoginResponse(token));
   }
 
   /**
@@ -72,12 +137,31 @@ public class AuthController {
    * @param user the authenticated user entity provided by Spring Security
    * @return the authenticated user's details
    */
+  @Operation(
+    summary = "Get authenticated user info",
+    description = "Returns details of the currently authenticated user. Requires a valid JWT token.",
+    security = {@SecurityRequirement(name = "bearerAuth")}
+  )
+  @ApiResponses({
+    @ApiResponse(
+      responseCode = "200",
+      description = "User details retrieved successfully",
+      content = @Content(schema = @Schema(implementation = UserResponse.class))),
+    @ApiResponse(
+      responseCode = "401",
+      description = "User not authenticated or token invalid",
+      content = @Content)
+  })
   @GetMapping("/me")
-  public ResponseEntity<UserResponse> getAuthenticatedUser(@AuthenticationPrincipal User user) {
+  public ResponseEntity<UserResponse> getAuthenticatedUser(
+    @Parameter(hidden = true) @AuthenticationPrincipal User user) {
+    // Additional safety check, though Spring Security should handle this
     if (user == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+        .body(new UserResponse(null, null, null, null, null));
     }
 
+    // Convert entity to DTO
     UserResponse response = new UserResponse(
       user.getId().intValue(),
       user.getName(),

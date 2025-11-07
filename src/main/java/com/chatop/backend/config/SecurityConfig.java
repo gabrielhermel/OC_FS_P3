@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -65,19 +66,43 @@ public class SecurityConfig {
       // Authorization rules
       .authorizeHttpRequests(auth -> {
         auth
-          .requestMatchers("/api/auth/register", "/api/auth/login").permitAll() // public
-          .requestMatchers("/api/auth/me").authenticated(); // protected
+          // Allow unauthenticated access to registration and login
+          .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+
+          // Require authentication for the /me endpoint
+          .requestMatchers("/api/auth/me").authenticated();
+
+        // Optionally allow unauthenticated access to Swagger UI and API docs
         if (swaggerNoAuth) {
           auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**").permitAll();
         }
+
+        // Require authentication for any other request
         auth.anyRequest().authenticated();
       })
+
+      // Custom exception handling for authentication and authorization failures
+      .exceptionHandling(exceptions -> exceptions
+        // Return 401 for unauthenticated requests
+        .authenticationEntryPoint((request, response, authException) -> {
+          response.setStatus(HttpStatus.UNAUTHORIZED.value());
+          response.setContentType("application/json");
+          response.getWriter().write("{}");
+        })
+        // Return 403 for forbidden access when user lacks permission
+        .accessDeniedHandler((request, response, accessDeniedException) -> {
+          response.setStatus(HttpStatus.FORBIDDEN.value());
+          response.setContentType("application/json");
+          response.getWriter().write("{}");
+        })
+      )
 
       // Add JWT filter before Spring’s built-in authentication filter
       .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
     return httpSecurity.build();
   }
+
 
   /**
    * Provides a BCrypt password encoder bean for hashing passwords.

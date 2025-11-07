@@ -1,5 +1,7 @@
 package com.chatop.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 
 /**
@@ -11,12 +13,14 @@ import java.time.LocalDateTime;
  * @param createdAt timestamp when the user was created
  * @param updatedAt timestamp when the user was last updated
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@Schema(description = "Response containing authenticated user details")
 public record UserResponse(
-  int id,
-  String name,
-  String email,
-  LocalDateTime createdAt,
-  LocalDateTime updatedAt
+  @Schema(example = "1") Integer id,
+  @Schema(example = "John Doe") String name,
+  @Schema(example = "john.doe@example.com") String email,
+  @Schema(example = "2025-11-06T12:00:00") LocalDateTime createdAt,
+  @Schema(example = "2025-11-06T12:00:00") LocalDateTime updatedAt
 ) {
 
 }

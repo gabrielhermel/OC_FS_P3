@@ -4,13 +4,18 @@ import com.chatop.backend.model.User;
 import com.chatop.backend.repository.UserRepository;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-/** Service handling user authentication and registration operations. */
+/**
+ * Service handling user authentication and registration operations.
+ */
 @Service
 @RequiredArgsConstructor
-public class AuthService {
+public class AuthService implements UserDetailsService {
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
@@ -48,6 +53,19 @@ public class AuthService {
   }
 
   /**
+   * Loads user details by email for authentication. Required by Spring Security.
+   *
+   * @param email the user's email (used as username)
+   * @return the authenticated user's details
+   * @throws UsernameNotFoundException if no user is found
+   */
+  @Override
+  public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+    return userRepository.findByEmail(email)
+      .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+  }
+
+  /**
    * Validates a raw password against the stored encrypted password.
    *
    * @param rawPassword     the plain text password to validate
@@ -57,4 +75,5 @@ public class AuthService {
   public boolean passwordIsValid(String rawPassword, String encodedPassword) {
     return passwordEncoder.matches(rawPassword, encodedPassword);
   }
+
 }
