@@ -1,5 +1,7 @@
 package com.chatop.backend.controller;
 
+import com.chatop.backend.annotation.GetByIdErrorResponses;
+import com.chatop.backend.annotation.PostUnsecuredErrorResponses;
 import com.chatop.backend.dto.LoginRequest;
 import com.chatop.backend.dto.LoginResponse;
 import com.chatop.backend.dto.RegisterRequest;
@@ -12,7 +14,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -54,22 +55,14 @@ public class AuthController {
     summary = "Register a new user",
     description = "Creates a new user account. Accessible without authentication."
   )
-  @ApiResponses({
-    @ApiResponse(
-      responseCode = "200",
-      description = "User registered successfully",
-      content = @Content(
-        mediaType = "application/json",
-        schema = @Schema(implementation = UserResponse.class)
-      )),
-    @ApiResponse(
-      responseCode = "400",
-      description = "Invalid input or email already in use",
-      content = @Content(
-        mediaType = "application/json",
-        schema = @Schema(example = "{}")
-      ))
-  })
+  @ApiResponse(
+    responseCode = "200",
+    description = "User registered successfully",
+    content = @Content(
+      mediaType = "application/json",
+      schema = @Schema(implementation = UserResponse.class)
+    ))
+  @PostUnsecuredErrorResponses
   @PostMapping("/register")
   public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
     try {
@@ -105,22 +98,14 @@ public class AuthController {
     description = "Authenticates user credentials and returns a JWT token. "
       + "Accessible without authentication."
   )
-  @ApiResponses({
-    @ApiResponse(
-      responseCode = "200",
-      description = "User authenticated successfully",
-      content = @Content(
-        mediaType = "application/json",
-        schema = @Schema(implementation = LoginResponse.class)
-      )),
-    @ApiResponse(
-      responseCode = "401",
-      description = "Invalid credentials",
-      content = @Content(
-        mediaType = "application/json",
-        schema = @Schema(example = "{}")
-      ))
-  })
+  @ApiResponse(
+    responseCode = "200",
+    description = "User authenticated successfully",
+    content = @Content(
+      mediaType = "application/json",
+      schema = @Schema(implementation = LoginResponse.class)
+    ))
+  @PostUnsecuredErrorResponses
   @PostMapping("/login")
   public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
     try {
@@ -154,22 +139,14 @@ public class AuthController {
     description = "Returns details of the currently authenticated user. Requires a valid JWT token.",
     security = {@SecurityRequirement(name = "bearerAuth")}
   )
-  @ApiResponses({
-    @ApiResponse(
-      responseCode = "200",
-      description = "User details retrieved successfully",
-      content = @Content(
-        mediaType = "application/json",
-        schema = @Schema(implementation = UserResponse.class)
-      )),
-    @ApiResponse(
-      responseCode = "401",
-      description = "User not authenticated or token invalid",
-      content = @Content(
-        mediaType = "application/json",
-        schema = @Schema(example = "{}")
-      ))
-  })
+  @ApiResponse(
+    responseCode = "200",
+    description = "User details retrieved successfully",
+    content = @Content(
+      mediaType = "application/json",
+      schema = @Schema(implementation = UserResponse.class)
+    ))
+  @GetByIdErrorResponses
   @GetMapping("/me")
   public ResponseEntity<UserResponse> getAuthenticatedUser(
     @Parameter(hidden = true) @AuthenticationPrincipal User user) {

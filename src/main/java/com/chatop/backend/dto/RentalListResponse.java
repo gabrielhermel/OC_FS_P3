@@ -15,8 +15,8 @@ import java.util.List;
 public record RentalListResponse(
   @ArraySchema(
     arraySchema = @Schema(description = "Array of rental objects"),
-    schema = @Schema(implementation = RentalListItem.class))
-  List<RentalListItem> rentals
+    schema = @Schema(implementation = RentalListItemResponse.class))
+  List<RentalListItemResponse> rentals
 ) {
 
 }

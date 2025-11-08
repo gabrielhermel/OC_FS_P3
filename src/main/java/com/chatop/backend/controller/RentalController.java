@@ -1,5 +1,6 @@
 package com.chatop.backend.controller;
 
+import com.chatop.backend.annotation.GetAllErrorResponses;
 import com.chatop.backend.dto.RentalListResponse;
 import com.chatop.backend.model.User;
 import com.chatop.backend.service.RentalService;
@@ -8,7 +9,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -44,32 +44,14 @@ public class RentalController {
     description = "Returns the list of all rentals. Requires authentication.",
     security = @SecurityRequirement(name = "bearerAuth")
   )
-  @ApiResponses({
-    @ApiResponse(
-      responseCode = "200",
-      description = "List of rentals retrieved successfully",
-      content = @Content(
-        mediaType = "application/json",
-        schema = @Schema(implementation = RentalListResponse.class)
-      )
-    ),
-    @ApiResponse(
-      responseCode = "401",
-      description = "Unauthorized or missing JWT",
-      content = @Content(
-        mediaType = "application/json",
-        schema = @Schema(example = "{}")
-      )
-    ),
-    @ApiResponse(
-      responseCode = "403",
-      description = "Forbidden: insufficient permissions",
-      content = @Content(
-        mediaType = "application/json",
-        schema = @Schema(example = "{}")
-      )
-    )
-  })
+  @ApiResponse(
+    responseCode = "200",
+    description = "List of rentals retrieved successfully",
+    content = @Content(
+      mediaType = "application/json",
+      schema = @Schema(implementation = RentalListResponse.class)
+    ))
+  @GetAllErrorResponses
   @GetMapping
   public ResponseEntity<RentalListResponse> getAllRentals(
     @Parameter(hidden = true) @AuthenticationPrincipal User user
@@ -82,5 +64,6 @@ public class RentalController {
     RentalListResponse response = rentalService.getAllRentals();
     return ResponseEntity.ok(response);
   }
+
 
 }

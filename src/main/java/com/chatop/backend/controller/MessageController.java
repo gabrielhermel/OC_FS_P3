@@ -1,5 +1,6 @@
 package com.chatop.backend.controller;
 
+import com.chatop.backend.annotation.PostSecuredErrorResponses;
 import com.chatop.backend.dto.MessageRequest;
 import com.chatop.backend.dto.MessageResponse;
 import com.chatop.backend.model.User;
@@ -8,7 +9,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -50,36 +50,14 @@ public class MessageController {
       + "linked to the specified rental and the authenticated user.",
     security = @SecurityRequirement(name = "bearerAuth")
   )
-  @ApiResponses({
-    @ApiResponse(
-      responseCode = "200",
-      description = "Message sent successfully",
-      content = @Content(
-        mediaType = "application/json",
-        schema = @Schema(implementation = MessageResponse.class)
-      )),
-    @ApiResponse(
-      responseCode = "400",
-      description = "Invalid input or missing fields",
-      content = @Content(
-        mediaType = "application/json",
-        schema = @Schema(example = "{}")
-      )),
-    @ApiResponse(
-      responseCode = "401",
-      description = "Unauthorized or missing JWT",
-      content = @Content(
-        mediaType = "application/json",
-        schema = @Schema(example = "{}")
-      )),
-    @ApiResponse(
-      responseCode = "403",
-      description = "Forbidden: insufficient permissions",
-      content = @Content(
-        mediaType = "application/json",
-        schema = @Schema(example = "{}")
-      ))
-  })
+  @ApiResponse(
+    responseCode = "200",
+    description = "Message sent successfully",
+    content = @Content(
+      mediaType = "application/json",
+      schema = @Schema(implementation = MessageResponse.class)
+    ))
+  @PostSecuredErrorResponses
   @PostMapping
   public ResponseEntity<MessageResponse> sendMessage(
     @Valid @RequestBody MessageRequest request,

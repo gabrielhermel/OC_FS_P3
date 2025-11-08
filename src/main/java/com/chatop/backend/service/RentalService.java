@@ -1,7 +1,8 @@
 package com.chatop.backend.service;
 
-import com.chatop.backend.dto.RentalListItem;
+import com.chatop.backend.dto.RentalListItemResponse;
 import com.chatop.backend.dto.RentalListResponse;
+import com.chatop.backend.dto.SingleRentalResponse;
 import com.chatop.backend.model.Rental;
 import com.chatop.backend.repository.RentalRepository;
 import java.time.format.DateTimeFormatter;
@@ -30,12 +31,24 @@ public class RentalService {
    * @return a response containing the list of all rentals
    */
   public RentalListResponse getAllRentals() {
-    List<RentalListItem> rentalItems =
+    List<RentalListItemResponse> rentalItems =
       rentalRepository.findAll().stream()
         .map(this::toRentalListItem)
         .collect(Collectors.toList());
 
     return new RentalListResponse(rentalItems);
+  }
+
+  /**
+   * Retrieves a single rental by its ID and converts it to a DTO.
+   *
+   * @param id the ID of the rental
+   * @return the corresponding SingleRentalResponse DTO, or null if not found
+   */
+  public SingleRentalResponse getRentalById(Long id) {
+    return rentalRepository.findById(id)
+      .map(this::toSingleRentalResponse)
+      .orElse(null);
   }
 
   /**
@@ -45,8 +58,8 @@ public class RentalService {
    * @param rental the Rental entity to convert
    * @return a DTO representing the rental
    */
-  private RentalListItem toRentalListItem(Rental rental) {
-    return new RentalListItem(
+  private RentalListItemResponse toRentalListItem(Rental rental) {
+    return new RentalListItemResponse(
       rental.getId(),
       rental.getName(),
       rental.getSurface(),
@@ -57,4 +70,25 @@ public class RentalService {
       rental.getCreatedAt() != null ? rental.getCreatedAt().format(DATE_FORMATTER) : null,
       rental.getUpdatedAt() != null ? rental.getUpdatedAt().format(DATE_FORMATTER) : null);
   }
+
+  /**
+   * Identical to toRentalListItem but returns SingleRentalResponse DTO which wraps picture in a
+   * list to match Mockoon schema.
+   *
+   * @param rental the Rental entity to convert
+   * @return a DTO representing the single rental
+   */
+  private SingleRentalResponse toSingleRentalResponse(Rental rental) {
+    return new SingleRentalResponse(
+      rental.getId(),
+      rental.getName(),
+      rental.getSurface(),
+      rental.getPrice(),
+      List.of(rental.getPicture()), // Assuming single picture wrapped in a list
+      rental.getDescription(),
+      rental.getOwner().getId(),
+      rental.getCreatedAt() != null ? rental.getCreatedAt().format(DATE_FORMATTER) : null,
+      rental.getUpdatedAt() != null ? rental.getUpdatedAt().format(DATE_FORMATTER) : null);
+  }
+
 }
