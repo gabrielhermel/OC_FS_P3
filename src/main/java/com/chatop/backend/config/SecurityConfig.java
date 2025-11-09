@@ -69,6 +69,9 @@ public class SecurityConfig {
           // Allow unauthenticated access to registration and login
           .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
 
+          // Allow access to uploaded images (public resources)
+          .requestMatchers("/rental_images/**").permitAll()
+
           // Require authentication for the /me endpoint
           .requestMatchers("/api/auth/me").authenticated();
 

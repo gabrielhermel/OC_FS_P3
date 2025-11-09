@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Rental Images ###
+rental_images/*
+!rental_images/.gitkeep
