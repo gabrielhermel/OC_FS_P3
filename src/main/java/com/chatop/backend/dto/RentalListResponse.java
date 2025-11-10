@@ -13,9 +13,15 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "Response containing the list of rentals.")
 public record RentalListResponse(
+  // For underlying JSON spec
   @ArraySchema(
-    arraySchema = @Schema(description = "Array of rental objects"),
+    arraySchema = @Schema(description = "List of rental objects"),
     schema = @Schema(implementation = RentalListItemResponse.class))
+  // For Swagger UI
+  @Schema(
+    description = "List of rental objects",
+    implementation = RentalListItemResponse.class
+  )
   List<RentalListItemResponse> rentals
 ) {
 

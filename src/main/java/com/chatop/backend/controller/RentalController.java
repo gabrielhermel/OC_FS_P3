@@ -2,8 +2,11 @@ package com.chatop.backend.controller;
 
 import com.chatop.backend.annotation.GetAllErrorResponses;
 import com.chatop.backend.annotation.GetByIdErrorResponses;
+import com.chatop.backend.annotation.PostSecuredErrorResponses;
+import com.chatop.backend.dto.RentalCreateRequest;
 import com.chatop.backend.dto.RentalListResponse;
 import com.chatop.backend.dto.SingleRentalResponse;
+import com.chatop.backend.dto.StatusMessageResponse;
 import com.chatop.backend.model.User;
 import com.chatop.backend.service.RentalService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,12 +16,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -96,6 +102,38 @@ public class RentalController {
     }
 
     return ResponseEntity.ok(rental);
+  }
+
+  /**
+   * Creates a new rental listing. The authenticated user is automatically set as the owner.
+   *
+   * @param request DTO containing the new rental's details.
+   * @param user    The authenticated user, injected from the security context.
+   * @return A status message confirming creation.
+   */
+  @Operation(
+    summary = "Create a new rental listing",
+    description = "Creates a rental owned by the authenticated user using multipart/form-data",
+    security = @SecurityRequirement(name = "bearerAuth")
+  )
+  @ApiResponse(
+    responseCode = "200",
+    description = "Rental created successfully",
+    content = @Content(
+      mediaType = "application/json",
+      schema = @Schema(implementation = StatusMessageResponse.class)
+    )
+  )
+  @PostSecuredErrorResponses
+  @PostMapping(consumes = "multipart/form-data", produces = "application/json")
+  public ResponseEntity<StatusMessageResponse> createRental(
+    // Binds incoming multipart/form-data fields to the DTO
+    @ModelAttribute @Valid RentalCreateRequest request,
+    // Injects the authenticated User from the security context
+    @AuthenticationPrincipal User user
+  ) {
+    StatusMessageResponse response = rentalService.createRental(request, user);
+    return ResponseEntity.ok(response);
   }
 
 }

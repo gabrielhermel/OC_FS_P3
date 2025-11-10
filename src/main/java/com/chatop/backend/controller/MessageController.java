@@ -2,7 +2,7 @@ package com.chatop.backend.controller;
 
 import com.chatop.backend.annotation.PostSecuredErrorResponses;
 import com.chatop.backend.dto.MessageRequest;
-import com.chatop.backend.dto.MessageResponse;
+import com.chatop.backend.dto.StatusMessageResponse;
 import com.chatop.backend.model.User;
 import com.chatop.backend.service.MessageService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,11 +55,14 @@ public class MessageController {
     description = "Message sent successfully",
     content = @Content(
       mediaType = "application/json",
-      schema = @Schema(implementation = MessageResponse.class)
+      schema = @Schema(
+        implementation = StatusMessageResponse.class,
+        example = "{\"message\": \"Message sent with success\"}"
+      )
     ))
   @PostSecuredErrorResponses
   @PostMapping
-  public ResponseEntity<MessageResponse> sendMessage(
+  public ResponseEntity<StatusMessageResponse> sendMessage(
     @Valid @RequestBody MessageRequest request,
     @AuthenticationPrincipal User user
   ) {
@@ -71,12 +74,12 @@ public class MessageController {
 
     try {
       // Delegate message processing to service layer for business logic
-      MessageResponse response = messageService.sendMessage(request, user.getId());
+      StatusMessageResponse response = messageService.sendMessage(request, user.getId());
       // Return 200 OK with the created message response
       return ResponseEntity.ok(response);
     } catch (IllegalArgumentException e) {
       // Return 400 Bad Request for any validation errors
-      return ResponseEntity.badRequest().body(new MessageResponse(null));
+      return ResponseEntity.badRequest().body(new StatusMessageResponse(null));
     }
   }
 

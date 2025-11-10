@@ -1,15 +1,19 @@
 package com.chatop.backend.service;
 
+import com.chatop.backend.dto.RentalCreateRequest;
 import com.chatop.backend.dto.RentalListItemResponse;
 import com.chatop.backend.dto.RentalListResponse;
 import com.chatop.backend.dto.SingleRentalResponse;
+import com.chatop.backend.dto.StatusMessageResponse;
 import com.chatop.backend.model.Rental;
+import com.chatop.backend.model.User;
 import com.chatop.backend.repository.RentalRepository;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service handling rental-related operations. Responsible for retrieving, creating, and updating
@@ -24,6 +28,10 @@ public class RentalService {
    */
   private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd");
   private final RentalRepository rentalRepository;
+  /**
+   * Image storage service used to validate and save uploaded rental pictures
+   */
+  private final RentalImageStorageService rentalImageStorageService;
 
   /**
    * Retrieves all rentals from the database and converts them into DTOs.
@@ -89,6 +97,40 @@ public class RentalService {
       rental.getOwner().getId(),
       rental.getCreatedAt() != null ? rental.getCreatedAt().format(DATE_FORMATTER) : null,
       rental.getUpdatedAt() != null ? rental.getUpdatedAt().format(DATE_FORMATTER) : null);
+  }
+
+  /**
+   * Creates a new rental listing for the specified owner. Persists a new Rental entity without a
+   * picture URL to obtain the generated ID, saves the image using RentalImageStorageService,
+   * updates the Rental with the returned URL, and commits the transaction.
+   *
+   * @param request multipart form containing name, surface, price, description, and picture
+   * @param owner   the authenticated user creating the rental
+   * @return StatusMessageResponse with "Rental created!"
+   */
+  @Transactional // Ensures if the initial insert or the update fails, no rental is persisted
+  public StatusMessageResponse createRental(RentalCreateRequest request, User owner) {
+    // Create Rental entity without picture
+    Rental rental = new Rental();
+    rental.setName(request.getName());
+    rental.setSurface(request.getSurface());
+    rental.setPrice(request.getPrice());
+    rental.setDescription(request.getDescription());
+    rental.setOwner(owner);
+    // Persist to get generated ID
+    rental = rentalRepository.save(rental);
+
+    // Save image and get URL
+    String pictureUrl =
+      rentalImageStorageService.saveRentalImage(request.getPicture(), rental.getId());
+
+    // Update rental with picture URL
+    rental.setPicture(pictureUrl);
+    // Save updated rental
+    rentalRepository.save(rental);
+
+    // Return status message
+    return new StatusMessageResponse("Rental created!");
   }
 
 }

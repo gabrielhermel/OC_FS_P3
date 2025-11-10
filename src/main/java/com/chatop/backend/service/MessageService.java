@@ -1,7 +1,7 @@
 package com.chatop.backend.service;
 
 import com.chatop.backend.dto.MessageRequest;
-import com.chatop.backend.dto.MessageResponse;
+import com.chatop.backend.dto.StatusMessageResponse;
 import com.chatop.backend.model.Message;
 import com.chatop.backend.model.Rental;
 import com.chatop.backend.model.User;
@@ -31,7 +31,7 @@ public class MessageService {
    * @return confirmation response after saving
    * @throws IllegalArgumentException if the user or rental does not exist
    */
-  public MessageResponse sendMessage(MessageRequest request, Long userId) {
+  public StatusMessageResponse sendMessage(MessageRequest request, Long userId) {
     // Fetch user and rental entities to maintain referential integrity
     User user = userRepository.findById(userId)
       .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
@@ -47,7 +47,7 @@ public class MessageService {
 
     messageRepository.save(message);
 
-    return new MessageResponse("Message sent with success");
+    return new StatusMessageResponse("Message sent with success");
   }
 
 }

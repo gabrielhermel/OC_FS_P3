@@ -22,11 +22,11 @@ import java.math.BigDecimal;
 @Schema(description = "One rental item returned by the rentals list endpoint.")
 public record RentalListItemResponse(
   @Schema(example = "1") Long id,
-  @Schema(example = "House 1") String name,
-  @Schema(example = "100.5") BigDecimal surface,
-  @Schema(example = "750.5") BigDecimal price,
-  @Schema(example = "https://example.com/pic.jpg") String picture,
-  @Schema(example = "Lorem ipsum dolor sit amet...") String description,
+  @Schema(example = "Studio Loft") String name,
+  @Schema(example = "35.5") BigDecimal surface,
+  @Schema(example = "699.99") BigDecimal price,
+  @Schema(example = "/rental_images/rental_1_1731254789123.jpg") String picture,
+  @Schema(example = "Close to the city center...") String description,
   @JsonProperty("owner_id") @Schema(example = "1") Long ownerId,
   @JsonProperty("created_at") @Schema(example = "2025/10/6") String createdAt,
   @JsonProperty("updated_at") @Schema(example = "2025/10/7") String updatedAt
