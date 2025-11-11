@@ -3,8 +3,10 @@ package com.chatop.backend.service;
 import com.chatop.backend.dto.RentalCreateRequest;
 import com.chatop.backend.dto.RentalListItemResponse;
 import com.chatop.backend.dto.RentalListResponse;
+import com.chatop.backend.dto.RentalUpdateRequest;
 import com.chatop.backend.dto.SingleRentalResponse;
 import com.chatop.backend.dto.StatusMessageResponse;
+import com.chatop.backend.exception.ResourceNotFoundException;
 import com.chatop.backend.model.Rental;
 import com.chatop.backend.model.User;
 import com.chatop.backend.repository.RentalRepository;
@@ -12,6 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -133,4 +136,61 @@ public class RentalService {
     return new StatusMessageResponse("Rental created!");
   }
 
+  /**
+   * Updates an existing rental. Only the owner can perform the update. If a new picture is
+   * uploaded, it replaces the old one in the database, but the old image file remains on disk. At
+   * least one field must be provided; otherwise, a 400 Bad Request is thrown.
+   *
+   * @param rentalId ID of rental to update
+   * @param request  multipart form data with updated fields
+   * @param user     authenticated user from security context
+   * @return StatusMessageResponse with "Rental updated!"
+   */
+  @Transactional // Prevents partial updates if any step fails
+  public StatusMessageResponse updateRental(Long rentalId, RentalUpdateRequest request, User user) {
+    Rental rental = rentalRepository.findById(rentalId)
+      .orElseThrow(() -> new ResourceNotFoundException("Rental not found with ID: " + rentalId));
+
+    Long userId = user.getId();
+    boolean updated = false; // Track if any field was actually modified
+
+    // Verify ownership
+    if (!rental.getOwner().getId().equals(userId)) {
+      throw new AccessDeniedException(
+        "User (ID: " + userId + ") is not the owner of rental (ID: " + rentalId + ").");
+    }
+
+    // Update fields if provided
+    if (request.getName() != null && !request.getName().isBlank()) {
+      rental.setName(request.getName());
+      updated = true;
+    }
+    if (request.getSurface() != null) {
+      rental.setSurface(request.getSurface());
+      updated = true;
+    }
+    if (request.getPrice() != null) {
+      rental.setPrice(request.getPrice());
+      updated = true;
+    }
+    if (request.getDescription() != null && !request.getDescription().isBlank()) {
+      rental.setDescription(request.getDescription());
+      updated = true;
+    }
+    if (request.getPicture() != null && !request.getPicture().isEmpty()) {
+      String pictureUrl =
+        rentalImageStorageService.saveRentalImage(request.getPicture(), rental.getId());
+      rental.setPicture(pictureUrl);
+      updated = true;
+    }
+
+    // If no fields were updated, throw exception
+    if (!updated) {
+      throw new IllegalArgumentException("At least one field must be provided for update.");
+    }
+
+    rentalRepository.save(rental);
+
+    return new StatusMessageResponse("Rental updated!");
+  }
 }

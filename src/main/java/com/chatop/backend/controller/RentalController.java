@@ -3,8 +3,10 @@ package com.chatop.backend.controller;
 import com.chatop.backend.annotation.GetAllErrorResponses;
 import com.chatop.backend.annotation.GetByIdErrorResponses;
 import com.chatop.backend.annotation.PostSecuredErrorResponses;
+import com.chatop.backend.annotation.PutErrorResponses;
 import com.chatop.backend.dto.RentalCreateRequest;
 import com.chatop.backend.dto.RentalListResponse;
+import com.chatop.backend.dto.RentalUpdateRequest;
 import com.chatop.backend.dto.SingleRentalResponse;
 import com.chatop.backend.dto.StatusMessageResponse;
 import com.chatop.backend.model.User;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -107,23 +110,21 @@ public class RentalController {
   /**
    * Creates a new rental listing. The authenticated user is automatically set as the owner.
    *
-   * @param request DTO containing the new rental's details.
-   * @param user    The authenticated user, injected from the security context.
-   * @return A status message confirming creation.
+   * @param request DTO containing the new rental's details
+   * @param user    authenticated user from security context
+   * @return status message confirming creation
    */
   @Operation(
     summary = "Create a new rental listing",
-    description = "Creates a rental owned by the authenticated user using multipart/form-data",
-    security = @SecurityRequirement(name = "bearerAuth")
-  )
+    description = "Creates a rental owned by the authenticated user. All fields are required.",
+    security = @SecurityRequirement(name = "bearerAuth"))
   @ApiResponse(
     responseCode = "200",
     description = "Rental created successfully",
     content = @Content(
       mediaType = "application/json",
       schema = @Schema(implementation = StatusMessageResponse.class)
-    )
-  )
+    ))
   @PostSecuredErrorResponses
   @PostMapping(consumes = "multipart/form-data", produces = "application/json")
   public ResponseEntity<StatusMessageResponse> createRental(
@@ -133,6 +134,43 @@ public class RentalController {
     @AuthenticationPrincipal User user
   ) {
     StatusMessageResponse response = rentalService.createRental(request, user);
+    return ResponseEntity.ok(response);
+  }
+
+  /**
+   * Updates an existing rental listing. All fields are optional; only provided fields are updated.
+   * At least one field must be provided. The authenticated user must be the rental owner.
+   *
+   * @param id      rental ID
+   * @param request DTO containing fields to update
+   * @param user    authenticated user from security context
+   * @return status message confirming the update
+   */
+  @Operation(
+    summary = "Update an existing rental listing",
+    description = "Updates a rental owned by the authenticated user. "
+      + "At least one field must be provided.",
+    security = @SecurityRequirement(name = "bearerAuth"))
+  @ApiResponse(
+    responseCode = "200",
+    description = "Rental updated successfully",
+    content = @Content(
+      mediaType = "application/json",
+      schema = @Schema(
+        implementation = StatusMessageResponse.class,
+        example = "{\"message\": \"Rental updated!\"}"
+      )
+    ))
+  @PutErrorResponses
+  @PutMapping(value = "/{id}", consumes = "multipart/form-data", produces = "application/json")
+  public ResponseEntity<StatusMessageResponse> updateRental(
+    @PathVariable("id") Long id,
+    // Binds incoming multipart/form-data fields to the DTO
+    @ModelAttribute RentalUpdateRequest request,
+    // Injects the authenticated User from the security context
+    @AuthenticationPrincipal User user
+  ) {
+    StatusMessageResponse response = rentalService.updateRental(id, request, user);
     return ResponseEntity.ok(response);
   }
 

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -82,5 +83,23 @@ public class GlobalExceptionHandler {
     log.warn("Upload size exceeded (max: {})",
       ex.getMaxUploadSize() == -1 ? maxUploadSizeConfigured : ex.getMaxUploadSize() + " bytes");
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of());
+  }
+
+  /**
+   * Handles authorization failures when users attempt actions they don't have permission for.
+   */
+  @ExceptionHandler(AccessDeniedException.class)
+  public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
+    log.warn("Access denied: {}", ex.getMessage());
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of());
+  }
+
+  /**
+   * Handles not found errors when requested resources are missing.
+   */
+  @ExceptionHandler(ResourceNotFoundException.class)
+  public ResponseEntity<Map<String, Object>> handleResourceNotFound(ResourceNotFoundException ex) {
+    log.debug("Resource not found: {}", ex.getMessage());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of());
   }
 }
