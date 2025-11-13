@@ -263,6 +263,7 @@ To stop the application, press **Ctrl + C** in the terminal.
 ### Using Swagger UI
 
 Swagger UI is accessible without login (by default) to test all endpoints, including authenticated ones, at:
+
 [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
 
 ### Using an API client
