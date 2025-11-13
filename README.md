@@ -22,7 +22,8 @@ This guide explains how to install, configure, and run the project locally.
 
 - [Project Structure](#project-structure)
 - [Prerequisites](#prerequisites)
-- [Database Installation and Setup](#database-installation-and-setup)
+- [Installation](#installation)
+- [Database Setup](#database-setup)
 - [Configuration](#configuration)
 - [Run the Application](#run-the-application)
 - [Testing](#testing)
@@ -75,11 +76,34 @@ git --version
 
 ---
 
-## Database Installation and Setup
+## Installation
+
+### Clone the repository
+
+Open a terminal (Linux/Mac) or Command Prompt/PowerShell (Windows) and navigate to the directory where you want to store the project.
+
+Then clone the repository:
+```bash
+git clone https://github.com/gabrielhermel/OC_FS_P3.git
+```
+
+### Navigate to the project root
+```bash
+cd OC_FS_P3
+```
+
+You are now in the project's root directory, which is where the Maven wrapper (`mvnw`) commands in the **Run the Application** section should be executed.
+
+---
+
+## Database Setup
 
 ### Start MySQL
 
 **Linux:**
+
+
+(In a separate terminal which may be closed afterwards)
 
 ```bash
 sudo systemctl start mysql
@@ -88,6 +112,9 @@ sudo systemctl start mysql
 **macOS:**
 
 If installed via Homebrew:
+
+
+(In a separate terminal which may be closed afterwards)
 
 ```bash
 brew services start mysql
