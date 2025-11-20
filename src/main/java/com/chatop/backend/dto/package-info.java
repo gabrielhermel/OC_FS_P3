@@ -1,8 +1,9 @@
 /**
  * Data Transfer Objects (DTOs) for input and output between the API and clients.
  * <p>
- * DTOs ensure that API payloads remain independent from database entities, allowing internal models
- * to evolve without breaking external contracts.
+ * DTOs prevent exposing internal JPA entities directly to the outside world.
+ * They keep contracts with API consumers stable, even if persistence models change,
+ * and allow incoming and outgoing data to be shaped for specific use cases.
  * <p>
  * Examples:
  * <ul>
